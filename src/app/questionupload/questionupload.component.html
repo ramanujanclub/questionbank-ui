@@ -271,9 +271,10 @@
         </mat-accordion>
       </p>
       <br><br>
-
-      <button type="button" (click)="uploadQuestion()" style="margin-right: 10px" class="btn btn-primary">Upload Questions
-      </button>
+      <mat-bar-button style="margin-right: 10px"
+        [options]="barButtonOptions"
+        (btnClick)="uploadQuestion()">
+      </mat-bar-button>
       <button type="button" class="btn btn-secondary">Cancel</button>
 
     </div>

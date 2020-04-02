@@ -18,6 +18,8 @@ import {ErrorStateMatcher, ShowOnDirtyErrorStateMatcher} from '@angular/material
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 import {MatSelectModule} from '@angular/material/select';
 import {MatExpansionModule} from '@angular/material/expansion';
+import {MatSnackBarModule} from '@angular/material/snack-bar';
+import { MatProgressButtonsModule } from 'mat-progress-buttons';
 
 @NgModule({
   declarations: [
@@ -42,6 +44,8 @@ import {MatExpansionModule} from '@angular/material/expansion';
     FormsModule,
     MatSelectModule,
     MatExpansionModule,
+    MatSnackBarModule,
+    MatProgressButtonsModule
   ],
   providers: [
     {provide: ErrorStateMatcher, useClass: ShowOnDirtyErrorStateMatcher}

@@ -1,5 +1,6 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {QuestionuploadService} from './services/questionupload.service';
+import {MatProgressButtonOptions} from 'mat-progress-buttons';
 import {
   CorrectAnswer, QuestionCorrectAnswer,
   QuestionHint,
@@ -11,6 +12,7 @@ import {
 import {FormControl, FormGroup, FormGroupDirective, NgForm, Validators} from '@angular/forms';
 import {ErrorStateMatcher} from '@angular/material/core';
 import {HttpClient} from '@angular/common/http';
+import {MatSnackBar} from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-questionupload',
@@ -22,8 +24,10 @@ export class QuestionuploadComponent implements OnInit {
   labelImport: ElementRef;
 
   constructor(
-              private apiService: QuestionuploadService,
-              private httpClient: HttpClient
+    private apiService: QuestionuploadService,
+    private httpClient: HttpClient,
+    // tslint:disable-next-line:variable-name
+    private _snackBar: MatSnackBar
   ) {
     this.formImport = new FormGroup({
       uploadQuestionDescImage: new FormControl('', Validators.required),
@@ -63,6 +67,22 @@ export class QuestionuploadComponent implements OnInit {
 
   // matcher = new MyErrorStateMatcher();
 
+  barButtonOptions: MatProgressButtonOptions = {
+    active: false,
+    text: 'Upload Question',
+    buttonColor: 'primary',
+    barColor: 'accent',
+    raised: true,
+    stroked: false,
+    mode: 'indeterminate',
+    value: 0,
+    disabled: false,
+    fullWidth: false,
+    buttonIcon: {
+      fontIcon: 'save'
+    }
+  };
+
 
   ngOnInit() {
     this.uploadScannedQuestion = false;
@@ -79,17 +99,17 @@ export class QuestionuploadComponent implements OnInit {
   }
 
   onQuestionDescImageChange(files: FileList) {
-  /*  this.labelImport.nativeElement.innerText = Array.from(files)
+    this.labelImport.nativeElement.innerText = Array.from(files)
       .map(f => f.name)
-      .join(', ');*/
+      .join(', ');
     this.questionDescriptionImage = files.item(0);
     console.log('Question Image', this.questionDescriptionImage.name);
   }
 
   onScannedQuestionFileChange(files: FileList) {
-    /*this.labelImport.nativeElement.innerText = Array.from(files)
+    this.labelImport.nativeElement.innerText = Array.from(files)
       .map(f => f.name)
-      .join(', ');*/
+      .join(', ');
     this.scannedQuestionFile = files.item(0);
     console.log('Scanned Question ', this.scannedQuestionFile.name);
   }
@@ -101,11 +121,11 @@ export class QuestionuploadComponent implements OnInit {
   }
 
   getCorrectAnswer(key, value): void {
-      this.temp = [{answerKey: '', answerValue: ''}];
-      this.temp[0].answerValue = value;
-      this.temp[0].answerKey = key;
-      this.correctAnswers = this.temp;
-      console.log('Answers: ', this.correctAnswers);
+    this.temp = [{answerKey: '', answerValue: ''}];
+    this.temp[0].answerValue = value;
+    this.temp[0].answerKey = key;
+    this.correctAnswers = this.temp;
+    console.log('Answers: ', this.correctAnswers);
   }
 
   deleteItem(index): void {
@@ -113,6 +133,9 @@ export class QuestionuploadComponent implements OnInit {
   }
 
   uploadQuestion(): void {
+    this.barButtonOptions.active = true;
+    this.barButtonOptions.text = 'Saving Questions...';
+
     this.questionMetadata.name = this.questionMetadata.value;
     this.questionOptions = {multipleQuestionOption: this.multipleQuestionOption};
     this.questionCorrectAnswer = {correctAnswers: this.temp};
@@ -139,9 +162,25 @@ export class QuestionuploadComponent implements OnInit {
     const SERVER_URL = 'http://localhost:8080/api/v1/questionbank/upload';
 
     this.httpClient.post<any>(SERVER_URL, formData).subscribe(
-      (res) => console.log(res),
-      (err) => console.log(err)
+      (res) => {
+        this.barButtonOptions.active = false;
+        this.barButtonOptions.text = 'Upload Questions';
+        this.openSnackBar('Question successfully uploaded', '', 'snack-bar-success');
+      },
+      (err) => {
+        this.barButtonOptions.active = false;
+        this.barButtonOptions.text = 'Upload Questions';
+        this.openSnackBar('Something went wrong while uploading', '', 'snack-bar-error');
+      }
     );
+  }
+
+  openSnackBar(message: string, action: string, customClass: string) {
+    this._snackBar.open(message, action, {
+      duration: 8000,
+      verticalPosition: 'top',
+      panelClass: customClass
+    });
   }
 
 }
