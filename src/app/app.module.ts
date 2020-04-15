@@ -19,12 +19,19 @@ import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
 import {MatSelectModule} from '@angular/material/select';
 import {MatExpansionModule} from '@angular/material/expansion';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
-import { MatProgressButtonsModule } from 'mat-progress-buttons';
+import {MatProgressButtonsModule} from 'mat-progress-buttons';
+import {HomeComponent} from './home/home.component';
+import {MatBottomSheetModule} from '@angular/material/bottom-sheet';
+import {BottomsheetComponent} from './questionupload/bottomsheet.component';
+import {MatListModule} from '@angular/material/list';
+import {MatDialogModule} from '@angular/material/dialog';
 
 @NgModule({
   declarations: [
     AppComponent,
-    QuestionuploadComponent
+    QuestionuploadComponent,
+    HomeComponent,
+    BottomsheetComponent
   ],
   imports: [
     BrowserModule,
@@ -45,7 +52,10 @@ import { MatProgressButtonsModule } from 'mat-progress-buttons';
     MatSelectModule,
     MatExpansionModule,
     MatSnackBarModule,
-    MatProgressButtonsModule
+    MatProgressButtonsModule,
+    MatBottomSheetModule,
+    MatListModule,
+    MatDialogModule
   ],
   providers: [
     {provide: ErrorStateMatcher, useClass: ShowOnDirtyErrorStateMatcher}

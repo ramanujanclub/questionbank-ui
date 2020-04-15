@@ -2,17 +2,22 @@ import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {QuestionuploadService} from './services/questionupload.service';
 import {MatProgressButtonOptions} from 'mat-progress-buttons';
 import {
-  CorrectAnswer, QuestionCorrectAnswer,
+  CorrectAnswer,
+  QuestionCorrectAnswer,
   QuestionHint,
   QuestionMetaData,
-  QuestionOption, QuestionOptions,
+  QuestionOption,
+  QuestionOptions,
   QuestionOwnerDetails,
   QuestionuploadModel
 } from './model/questionupload.model';
-import {FormControl, FormGroup, FormGroupDirective, NgForm, Validators} from '@angular/forms';
-import {ErrorStateMatcher} from '@angular/material/core';
+import {FormControl, FormGroup, Validators} from '@angular/forms';
 import {HttpClient} from '@angular/common/http';
 import {MatSnackBar} from '@angular/material/snack-bar';
+import {globalConfig} from '../global-configuration';
+import {ParentquestionModel} from './model/parentquestion.model';
+import {MatBottomSheet} from '@angular/material/bottom-sheet';
+import {BottomsheetComponent} from './bottomsheet.component';
 
 @Component({
   selector: 'app-questionupload',
@@ -24,14 +29,17 @@ export class QuestionuploadComponent implements OnInit {
   labelImport: ElementRef;
 
   constructor(
-    private apiService: QuestionuploadService,
+    private questionuploadService: QuestionuploadService,
     private httpClient: HttpClient,
     // tslint:disable-next-line:variable-name
-    private _snackBar: MatSnackBar
+    private _snackBar: MatSnackBar,
+    // tslint:disable-next-line:variable-name
+    private _bottomSheet: MatBottomSheet
   ) {
     this.formImport = new FormGroup({
       uploadQuestionDescImage: new FormControl('', Validators.required),
-      uploadScannedQuestionFile: new FormControl('', Validators.required)
+      uploadScannedQuestionFile: new FormControl('', Validators.required),
+      uploadQuestionHintImage: new FormControl('', Validators.required)
     })
     ;
   }
@@ -39,6 +47,8 @@ export class QuestionuploadComponent implements OnInit {
   formImport: FormGroup;
   indexValue: number;
   questionUploadModel: QuestionuploadModel;
+  parentQuestionModel: ParentquestionModel;
+  isParent: boolean;
   questionHeader: string;
   questionDescription: string;
   uploadScannedQuestion: boolean;
@@ -50,10 +60,14 @@ export class QuestionuploadComponent implements OnInit {
   correctAnswers: Array<CorrectAnswer> = [{answerKey: '', answerValue: ''}];
   questionComplexityLevel: string;
   questionHint: QuestionHint;
+  questionHintImage: File = null;
   chapterId: number;
   classId: number;
+  questionNote: string;
   questionMetadata: QuestionMetaData = {name: '', value: ''};
   questionOwnerDetails: QuestionOwnerDetails;
+  parentQuestionId: string;
+  attachParent: boolean;
 
   temp: Array<CorrectAnswer>;
 
@@ -68,50 +82,31 @@ export class QuestionuploadComponent implements OnInit {
   // matcher = new MyErrorStateMatcher();
 
   barButtonOptions: MatProgressButtonOptions = {
-    active: false,
-    text: 'Upload Question',
-    buttonColor: 'primary',
-    barColor: 'accent',
-    raised: true,
-    stroked: false,
-    mode: 'indeterminate',
-    value: 0,
-    disabled: false,
-    fullWidth: false,
-    buttonIcon: {
-      fontIcon: 'save'
-    }
+    active: false, text: 'Upload Question', buttonColor: 'primary', barColor: 'accent', raised: true, stroked: false,
+    mode: 'indeterminate', value: 0, disabled: false, fullWidth: false, buttonIcon: {fontIcon: 'save'}
   };
-
 
   ngOnInit() {
     this.uploadScannedQuestion = false;
+    this.attachParent = false;
     this.multipleQuestionOption = [{optionKey: '', optionValue: ''}];
     this.questionOwnerDetails = {name: '', address: '', instituteName: '', schoolName: '', emailId: ''};
     this.questionHint = {hint: ''};
 
-    this.apiService.get().subscribe((data: QuestionuploadModel) => {
-      console.log(data);
-      this.questionUploadModel = data;
-    });
-
     this.indexValue = 0;
   }
 
-  onQuestionDescImageChange(files: FileList) {
+  uploadImageFiles(files: FileList, action: string) {
     this.labelImport.nativeElement.innerText = Array.from(files)
       .map(f => f.name)
       .join(', ');
-    this.questionDescriptionImage = files.item(0);
-    console.log('Question Image', this.questionDescriptionImage.name);
-  }
-
-  onScannedQuestionFileChange(files: FileList) {
-    this.labelImport.nativeElement.innerText = Array.from(files)
-      .map(f => f.name)
-      .join(', ');
-    this.scannedQuestionFile = files.item(0);
-    console.log('Scanned Question ', this.scannedQuestionFile.name);
+    if (action === `${globalConfig.constants.questionDescImage}`) {
+      this.questionDescriptionImage = files.item(0);
+    } else if (action === `${globalConfig.constants.scannedQuestionFile}`) {
+      this.scannedQuestionFile = files.item(0);
+    } else if (action === `${globalConfig.constants.hintImage}`) {
+      this.questionHintImage = files.item(0);
+    }
   }
 
   addItem(): void {
@@ -125,7 +120,6 @@ export class QuestionuploadComponent implements OnInit {
     this.temp[0].answerValue = value;
     this.temp[0].answerKey = key;
     this.correctAnswers = this.temp;
-    console.log('Answers: ', this.correctAnswers);
   }
 
   deleteItem(index): void {
@@ -134,45 +128,60 @@ export class QuestionuploadComponent implements OnInit {
 
   uploadQuestion(): void {
     this.barButtonOptions.active = true;
-    this.barButtonOptions.text = 'Saving Questions...';
+    this.barButtonOptions.text = `${globalConfig.buttontext.questionUploadInProgess}`;
 
     this.questionMetadata.name = this.questionMetadata.value;
     this.questionOptions = {multipleQuestionOption: this.multipleQuestionOption};
     this.questionCorrectAnswer = {correctAnswers: this.temp};
 
-    this.questionUploadModel = {
-      id: null,
-      questionDescription: this.questionDescription,
-      questionHeader: this.questionHeader,
-      questionOptions: this.questionOptions,
-      questionCorrectAnswer: this.questionCorrectAnswer,
-      chapterId: this.chapterId,
-      classId: this.classId,
-      questionComplexityLevel: this.questionComplexityLevel,
-      questionMetadata: this.questionMetadata,
-      questionOwnerDetails: this.questionOwnerDetails,
-      questionHint: this.questionHint
-    };
-    console.log(JSON.stringify(this.questionUploadModel));
-    const formData = new FormData();
-    formData.append('questionContentImage', this.questionDescriptionImage);
-    formData.append('scannedQuestionFile', this.scannedQuestionFile);
-    formData.append('question', JSON.stringify(this.questionUploadModel));
+    if (this.isParent) {
+      this.parentQuestionModel = {
+        parentQuestionId: this.parentQuestionId === undefined ? null : this.parentQuestionId,
+        questionDescription: this.questionDescription,
+        questionCategory: null,
+        questionHeader: this.questionHeader,
+        questionNote: this.questionNote,
+        questionComplexityLevel: this.questionComplexityLevel,
+        classId: this.classId,
+        questionDescriptionImage: null,
+        scannedQuestionImage: null
+      };
+      this.questionuploadService.uploadParentQuestion(this.parentQuestionModel).subscribe(
+        (res) => {
+          this.questionUploadSuccess();
+        },
+        (err) => {
+          this.questionUploadFailure();
+        });
+    } else {
+      this.questionUploadModel = {
+        id: null,
+        questionDescription: this.questionDescription,
+        questionHeader: this.questionHeader,
+        questionOptions: this.questionOptions,
+        questionCorrectAnswer: this.questionCorrectAnswer,
+        chapterId: this.chapterId,
+        classId: this.classId,
+        questionComplexityLevel: this.questionComplexityLevel,
+        questionMetadata: this.questionMetadata,
+        questionOwnerDetails: this.questionOwnerDetails,
+        questionHint: this.questionHint
+      };
 
-    const SERVER_URL = 'http://localhost:8080/api/v1/questionbank/upload';
+      const formData = new FormData();
+      formData.append('questionContentImage', this.questionDescriptionImage);
+      formData.append('scannedQuestionFile', this.scannedQuestionFile);
+      formData.append('question', JSON.stringify(this.questionUploadModel));
 
-    this.httpClient.post<any>(SERVER_URL, formData).subscribe(
-      (res) => {
-        this.barButtonOptions.active = false;
-        this.barButtonOptions.text = 'Upload Questions';
-        this.openSnackBar('Question successfully uploaded', '', 'snack-bar-success');
-      },
-      (err) => {
-        this.barButtonOptions.active = false;
-        this.barButtonOptions.text = 'Upload Questions';
-        this.openSnackBar('Something went wrong while uploading', '', 'snack-bar-error');
-      }
-    );
+      this.questionuploadService.uploadQuestion(formData).subscribe(
+        (res) => {
+          this.questionUploadSuccess();
+        },
+        (err) => {
+          this.questionUploadFailure();
+        }
+      );
+    }
   }
 
   openSnackBar(message: string, action: string, customClass: string) {
@@ -183,6 +192,22 @@ export class QuestionuploadComponent implements OnInit {
     });
   }
 
+  questionUploadSuccess(): void {
+    this.barButtonOptions.active = false;
+    this.barButtonOptions.text = `${globalConfig.buttontext.questionUpload}`;
+    this.openSnackBar(`${globalConfig.alertmessages.questionUploadSuccess}`, '', 'snack-bar-success');
+  }
+
+  questionUploadFailure(): void {
+    this.barButtonOptions.active = false;
+    this.barButtonOptions.text = `${globalConfig.buttontext.questionUpload}`;
+    this.openSnackBar(`${globalConfig.alertmessages.questionUploadFailure}`, '', 'snack-bar-error');
+  }
+
+  openBottomSheet(): void {
+    this._bottomSheet.open(BottomsheetComponent);
+  }
+
 }
 
 // export class MyErrorStateMatcher implements ErrorStateMatcher {
@@ -191,3 +216,4 @@ export class QuestionuploadComponent implements OnInit {
 //     return !!(control && control.invalid && (control.dirty || control.touched || isSubmitted));
 //   }
 // }
+

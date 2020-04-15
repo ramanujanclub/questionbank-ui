@@ -1,6 +1,6 @@
 .app-toolbar {
   z-index: 2;
-  position: fixed;
+  position: relative;
   height: 50px;
   font-family: cursive;
   font-weight: 400;
@@ -16,4 +16,11 @@
 .mat-drawer-inner-container {
   display: flex;
   flex-direction: column;
+}
+
+html,
+body,
+header,
+#intro {
+  height: 100%;
 }

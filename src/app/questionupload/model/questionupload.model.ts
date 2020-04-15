@@ -2,8 +2,6 @@ export interface QuestionuploadModel {
   id: string ;
   questionDescription: string ;
   questionHeader: string ;
-  // questionDescriptionImage: File ;
-  // scannedQuestionFile: File ;
   questionOptions: QuestionOptions ;
   questionCorrectAnswer: QuestionCorrectAnswer ;
   chapterId: number;

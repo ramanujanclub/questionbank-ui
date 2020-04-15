@@ -1,10 +1,4 @@
-<!--
-     <mat-spinner *ngIf="products === null"></mat-spinner>
-     <mat-card-title>{{products.questionHeader}}</mat-card-title>
-     <mat-card-title>{{products.questionComplexityLevel}}</mat-card-title>
-     <mat-card-title>{{products.classId}}</mat-card-title>
-     <mat-card-title>{{products.chapterId}}</mat-card-title>-->
-<mat-sidenav-container style="padding-top:50px">
+<mat-sidenav-container>
   <mat-sidenav-content>
 
     <mat-toolbar class="secondary-toolbar" color="primary">
@@ -12,6 +6,39 @@
     </mat-toolbar>
 
     <div id="mainContainer" style="padding: 40px;">
+      <p style="padding-bottom: 15px">
+        <mat-checkbox class="example-margin" [(ngModel)]="isParent" labelPosition=before>
+          <mat-label style="font-weight: bold; font-size: 17px; vertical-align: middle">Is this a Master question?
+          </mat-label>
+        </mat-checkbox>
+      </p>
+
+      <div *ngIf="!isParent">
+        <p style="padding-top: 15px;">
+          <label id="attach-parent-question-label" style="vertical-align: middle; font-weight: bold; font-size: 17px">Do
+            you want to attach a Master question?</label>
+          <mat-radio-group aria-labelledby="attach-parent-question-label" [(ngModel)]="attachParent" >
+            <mat-radio-button [value]="true">Yes</mat-radio-button>
+            <mat-radio-button [value]="false">No</mat-radio-button>
+          </mat-radio-group>
+        </p>
+
+        <p *ngIf="attachParent">
+          <mat-label style="font-weight: bold; font-size: 17px; padding-bottom:13px;vertical-align: middle">Master
+            Questions List:
+          </mat-label>
+          <br>
+          <mat-form-field appearance="outline" style="padding-top: 15px; width:40vw">
+            <mat-label>Select one master question to attach</mat-label>
+            <mat-select (ngModelChange)="openBottomSheet()" [(ngModel)]="parentQuestionId" name="chapter">
+              <mat-option value=1>Question 1</mat-option>
+              <mat-option value=2>Question 2</mat-option>
+              <mat-option value=3>Question 3</mat-option>
+              <mat-option value=4>Question 4</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </p>
+      </div>
 
       <p>
         <!--<mat-label style="font-weight: bold; font-size: 17px; vertical-align: middle">Question Header:</mat-label>-->
@@ -65,11 +92,9 @@
             <div class="custom-file">
               <input type="file" class="custom-file-input" multiple formControlName="uploadQuestionDescImage"
                      id="uploadQuestionDescImage"
-                     (change)="onQuestionDescImageChange($event.target.files)"/>
+                     (change)="uploadImageFiles($event.target.files, 'questiondescimage')"/>
               <label class="custom-file-label" #labelImport for="uploadQuestionDescImage"><i class="fas fa-search"></i>
-                Question
-                Description
-                Image (if any)</label>
+                Question Description Image (if any)</label>
             </div>
           </div>
         </form>
@@ -85,7 +110,7 @@
             <div class="custom-file">
               <input type="file" class="custom-file-input" multiple formControlName="uploadScannedQuestionFile"
                      id="uploadScannedQuestionFile"
-                     (change)="onScannedQuestionFileChange($event.target.files)"/>
+                     (change)="uploadImageFiles($event.target.files, 'scannedquestionfile')"/>
               <label class="custom-file-label" #labelImport for="uploadScannedQuestionFile"><i
                 class="fas fa-search"></i>Scanned Question File</label>
             </div>
@@ -93,74 +118,91 @@
         </form>
       </div>
 
-      <table style="margin-bottom: 40px">
-        <tr>
-          <td style="padding-bottom:13px">
-            <mat-label style="font-weight: bold; font-size: 17px;vertical-align: middle">Options:</mat-label>
-            <br>
-          </td>
-        </tr>
-        <tr *ngFor="let row of multipleQuestionOption;let index = index">
-          <td style="margin-bottom: 10px">
-            <mat-form-field appearance="outline" style="padding-bottom: 0px">
-              <mat-label>Question Options</mat-label>
-              <input matInput [(ngModel)]="row.optionValue" placeholder="Ex. 1) Two">
-            </mat-form-field>
-            <a (click)="deleteItem(index)">
-              <mat-icon *ngIf="indexValue!=0" style="vertical-align:middle ">delete</mat-icon>
-            </a>
-          </td>
-        </tr>
-        <tr class="example-button-row" *ngIf="indexValue!=3">
-          <button (click)="addItem()">Add Options</button>
-        </tr>
-      </table>
+      <div *ngIf="!isParent">
+        <table style="margin-bottom: 40px">
+          <tr>
+            <td style="padding-bottom:13px">
+              <mat-label style="font-weight: bold; font-size: 17px;vertical-align: middle">Options:</mat-label>
+              <br>
+            </td>
+          </tr>
+          <tr *ngFor="let row of multipleQuestionOption;let index = index">
+            <td style="margin-bottom: 10px">
+              <mat-form-field appearance="outline" style="padding-bottom: 0px">
+                <mat-label>Question Options</mat-label>
+                <input matInput [(ngModel)]="row.optionValue" placeholder="Ex. 1) Two">
+              </mat-form-field>
+              <a (click)="deleteItem(index)">
+                <mat-icon *ngIf="indexValue!=0" style="vertical-align:middle ">delete</mat-icon>
+              </a>
+            </td>
+          </tr>
+          <tr class="example-button-row" *ngIf="indexValue!=3">
+            <button (click)="addItem()">Add Options</button>
+          </tr>
+        </table>
+
+        <p>
+          <mat-label style="font-weight: bold; font-size: 17px; padding-bottom:13px;vertical-align: middle">Answer:
+          </mat-label>
+          <br>
+          <mat-form-field appearance="outline" style="padding-top: 15px">
+            <mat-label>Please add <b>Questions Options</b> to select answer</mat-label>
+            <mat-select [(ngModel)]="correctAnswers" name="answer" [disabled]="multipleQuestionOption.length === 1">
+              <mat-option *ngFor="let option of multipleQuestionOption; let index = index" [value]="option.optionValue"
+                          (onSelectionChange)="getCorrectAnswer(option.optionKey, option.optionValue)">
+                {{option.optionValue}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </p>
+      </div>
 
       <p>
-        <mat-label style="font-weight: bold; font-size: 17px; padding-bottom:13px;vertical-align: middle">Answer:
-        </mat-label>
-        <br>
-        <mat-form-field appearance="outline" style="padding-top: 15px">
-          <mat-label>Please add <b>Questions Options</b> to select answer</mat-label>
-          <mat-select [(ngModel)]="correctAnswers" name="answer" [disabled]="multipleQuestionOption.length === 1">
-            <mat-option *ngFor="let option of multipleQuestionOption; let index = index" [value]="option.optionValue"
-                        (onSelectionChange)="getCorrectAnswer(option.optionKey, option.optionValue)">
-              {{option.optionValue}}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </p>
-
-      <p>
-        <mat-label style="font-weight: bold; font-size: 17px; vertical-align: middle;">Question Hint:</mat-label>
+        <mat-label style="font-weight: bold; font-size: 17px; vertical-align: middle;">Question Note:</mat-label>
         <br>
         <mat-form-field appearance="outline" style="padding-top:15px;">
-          <mat-label>Question Hint</mat-label>
-          <input matInput placeholder="Ex. Addition" [(ngModel)]="questionHint.hint">
+          <mat-label>Question Note</mat-label>
+          <input matInput placeholder="Ex. Note: This is a multiple choice question" [(ngModel)]="questionNote">
         </mat-form-field>
       </p>
 
-      <p>
-        <mat-label style="font-weight: bold; font-size: 17px; padding-bottom:13px;vertical-align: middle">Chapter:
-        </mat-label>
-        <br>
-        <!--<mat-form-field appearance="outline" style="padding-top: 15px; width:10vw">
-          <mat-label>Chapter</mat-label>
-          <mat-select [(ngModel)]="chapterId" name="answer">
-            <mat-option *ngFor="let answer of multipleQuestionOption" [value]="answer.optionKey">
-              {{answer.optionValue}}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>-->
-        <mat-form-field appearance="outline" style="padding-top: 15px; width:10vw">
-          <mat-label>Chapter</mat-label>
-          <mat-select [(ngModel)]="chapterId" name="chapter">
-            <mat-option value=1>Addition</mat-option>
-            <mat-option value=2>Subtraction</mat-option>
-            <mat-option value=3>Division</mat-option>
-            <mat-option value=4>Multiplication</mat-option>
-          </mat-select>
-        </mat-form-field>
+      <div *ngIf="!isParent">
+        <p>
+          <mat-label style="font-weight: bold; font-size: 17px; vertical-align: middle;">Question Hint:</mat-label>
+          <br>
+          <mat-form-field appearance="outline" style="padding-top:15px;">
+            <mat-label>Question Hint</mat-label>
+            <input matInput placeholder="Ex. Addition" [(ngModel)]="questionHint.hint">
+          </mat-form-field>
+        </p>
+
+        <div style="width: 40vw; padding-bottom: 20px">
+          <mat-label style="font-weight: bold; font-size: 17px; vertical-align: middle">Question Hint Image:</mat-label>
+          <br><br>
+          <form validate [formGroup]="formImport">
+            <div class="input-group mb-3">
+              <div class="custom-file">
+                <input type="file" class="custom-file-input" multiple formControlName="uploadQuestionHintImage"
+                       id="uploadQuestionHintImage"
+                       (change)="uploadImageFiles($event.target.files, 'hintimage')"/>
+                <label class="custom-file-label" #labelImport for="uploadQuestionHintImage"><i
+                  class="fas fa-search"></i>Question Hint Image (If any)</label>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <p style="padding-top:20px; ">
+        <label id="complexity-label"
+               style="vertical-align: middle; font-weight: bold; font-size: 17px">Complexity:</label>
+        <mat-radio-group aria-labelledby="complexity-label" [(ngModel)]="questionComplexityLevel">
+          <mat-radio-button value="Applied">Applied</mat-radio-button>
+          <mat-radio-button value="Direct">Direct</mat-radio-button>
+          <mat-radio-button value="Medium">Medium</mat-radio-button>
+          <mat-radio-button value="Hard">Hard</mat-radio-button>
+        </mat-radio-group>
       </p>
 
       <p>
@@ -169,11 +211,11 @@
         <br>
         <mat-form-field appearance="outline" style="padding-top: 15px; width:10vw">
           <mat-label>Class</mat-label>
-         <!-- <mat-select [(ngModel)]="classId" name="answer">
-            <mat-option *ngFor="let answer of multipleQuestionOption" [value]="answer.optionKey">
-              {{answer.optionValue}}
-            </mat-option>
-          </mat-select>-->
+          <!-- <mat-select [(ngModel)]="classId" name="answer">
+             <mat-option *ngFor="let answer of multipleQuestionOption" [value]="answer.optionKey">
+               {{answer.optionValue}}
+             </mat-option>
+           </mat-select>-->
           <mat-select [(ngModel)]="classId" name="class">
             <mat-option value=1>1</mat-option>
             <mat-option value=2>2</mat-option>
@@ -189,91 +231,97 @@
         </mat-form-field>
       </p>
 
-      <p>
-        <label id="complexity-label"
-               style="vertical-align: middle; font-weight: bold; font-size: 17px">Complexity:</label>
-        <mat-radio-group aria-labelledby="complexity-label" [(ngModel)]="questionComplexityLevel">
-          <mat-radio-button value="Applied">Applied</mat-radio-button>
-          <mat-radio-button value="Direct">Direct</mat-radio-button>
-          <mat-radio-button value="Medium">Medium</mat-radio-button>
-          <mat-radio-button value="Hard">Hard</mat-radio-button>
-        </mat-radio-group>
-      </p>
+      <div *ngIf="!isParent" style="padding-bottom: 25px">
+        <p>
+          <mat-label style="font-weight: bold; font-size: 17px; padding-bottom:13px;vertical-align: middle">Chapter:
+          </mat-label>
+          <br>
+          <mat-form-field appearance="outline" style="padding-top: 15px; width:10vw">
+            <mat-label>Chapter</mat-label>
+            <mat-select [(ngModel)]="chapterId" name="chapter">
+              <mat-option value=1>Addition</mat-option>
+              <mat-option value=2>Subtraction</mat-option>
+              <mat-option value=3>Division</mat-option>
+              <mat-option value=4>Multiplication</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </p>
 
-      <p>
-        <mat-accordion class="example-headers-align">
-          <mat-expansion-panel hideToggle>
-            <mat-expansion-panel-header>
-              <mat-panel-title>
-                <b>Question's Extra Information</b>
-              </mat-panel-title>
-              <mat-panel-description>
-                Add extra details of the question
-              </mat-panel-description>
-              <mat-icon style="float: right">details</mat-icon>
-            </mat-expansion-panel-header>
+        <p>
+          <mat-accordion class="example-headers-align">
+            <mat-expansion-panel hideToggle>
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <b>Question's Extra Information</b>
+                </mat-panel-title>
+                <mat-panel-description>
+                  Add extra details of the question
+                </mat-panel-description>
+                <mat-icon style="float: right">details</mat-icon>
+              </mat-expansion-panel-header>
 
-            <table style="margin-bottom: 40px">
-              <tr>
-                <td style="margin-bottom: 10px">
-                  <mat-form-field>
-                    <mat-label>Details</mat-label>
-                    <input matInput [(ngModel)]="questionMetadata.value" placeholder="Ex. 1) Two">
-                  </mat-form-field>
-                </td>
-              </tr>
-             <!-- <tr class="example-button-row" *ngIf="indexValue!=3">
-                <button (click)="addMetaData()">Add Details</button>
-              </tr>-->
-            </table>
+              <table style="margin-bottom: 40px">
+                <tr>
+                  <td style="margin-bottom: 10px">
+                    <mat-form-field>
+                      <mat-label>Details</mat-label>
+                      <input matInput [(ngModel)]="questionMetadata.value" placeholder="Ex. 1) Two">
+                    </mat-form-field>
+                  </td>
+                </tr>
+                <!-- <tr class="example-button-row" *ngIf="indexValue!=3">
+                   <button (click)="addMetaData()">Add Details</button>
+                 </tr>-->
+              </table>
 
-          </mat-expansion-panel>
+            </mat-expansion-panel>
 
-          <mat-expansion-panel hideToggle>
-            <mat-expansion-panel-header>
-              <mat-panel-title>
-                <b>Question Owner Details</b>
-              </mat-panel-title>
-              <mat-panel-description style="margin-left: 30px">
-                Enter the question owner details
-              </mat-panel-description>
-              <mat-icon>account_circle</mat-icon>
-            </mat-expansion-panel-header>
+            <mat-expansion-panel hideToggle>
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <b>Question Owner Details</b>
+                </mat-panel-title>
+                <mat-panel-description style="margin-left: 30px">
+                  Enter the question owner details
+                </mat-panel-description>
+                <mat-icon>account_circle</mat-icon>
+              </mat-expansion-panel-header>
 
-            <mat-form-field>
-              <mat-label>Name</mat-label>
-              <input matInput placeholder="Ex. Narendra Modi" [(ngModel)]="questionOwnerDetails.name">
-            </mat-form-field>
-            <br>
-            <mat-form-field>
-              <mat-label>Email</mat-label>
-              <input matInput placeholder="Ex. pat@example.com" [(ngModel)]="questionOwnerDetails.emailId">
-            </mat-form-field>
-            <br>
-            <mat-form-field>
-              <mat-label>Telephone</mat-label>
-              <input type="tel" matInput placeholder="123-456-1234" [(ngModel)]="questionOwnerDetails.schoolName">
-            </mat-form-field>
-            <br>
-            <mat-form-field>
-              <mat-label>Institution</mat-label>
-              <input matInput placeholder="Ex. Sophia Coaching Center" [(ngModel)]="questionOwnerDetails.instituteName">
-            </mat-form-field>
-            <br>
-            <mat-form-field style="padding-top: 15px">
-              <mat-label>Address</mat-label>
-              <input matInput placeholder="Ex. HSR Layout, Bengaluru" [(ngModel)]="questionOwnerDetails.address">
-              <textarea matInput></textarea>
-            </mat-form-field>
+              <mat-form-field>
+                <mat-label>Name</mat-label>
+                <input matInput placeholder="Ex. Narendra Modi" [(ngModel)]="questionOwnerDetails.name">
+              </mat-form-field>
+              <br>
+              <mat-form-field>
+                <mat-label>Email</mat-label>
+                <input matInput placeholder="Ex. pat@example.com" [(ngModel)]="questionOwnerDetails.emailId">
+              </mat-form-field>
+              <br>
+              <mat-form-field>
+                <mat-label>Telephone</mat-label>
+                <input type="tel" matInput placeholder="123-456-1234" [(ngModel)]="questionOwnerDetails.schoolName">
+              </mat-form-field>
+              <br>
+              <mat-form-field>
+                <mat-label>Institution</mat-label>
+                <input matInput placeholder="Ex. Sophia Coaching Center"
+                       [(ngModel)]="questionOwnerDetails.instituteName">
+              </mat-form-field>
+              <br>
+              <mat-form-field style="padding-top: 15px">
+                <mat-label>Address</mat-label>
+                <input matInput placeholder="Ex. HSR Layout, Bengaluru" [(ngModel)]="questionOwnerDetails.address">
+                <textarea matInput></textarea>
+              </mat-form-field>
 
-          </mat-expansion-panel>
+            </mat-expansion-panel>
 
-        </mat-accordion>
-      </p>
-      <br><br>
+          </mat-accordion>
+        </p>
+      </div>
       <mat-bar-button style="margin-right: 10px"
-        [options]="barButtonOptions"
-        (btnClick)="uploadQuestion()">
+                      [options]="barButtonOptions"
+                      (btnClick)="uploadQuestion()">
       </mat-bar-button>
       <button type="button" class="btn btn-secondary">Cancel</button>
 
