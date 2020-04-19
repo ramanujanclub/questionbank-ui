@@ -28,7 +28,8 @@
     "rxjs": "~6.5.4",
     "tslib": "^1.10.0",
     "zone.js": "~0.10.2",
-    "mat-progress-buttons": "latest"
+    "mat-progress-buttons": "latest",
+    "angular2": "latest"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~0.900.3",

@@ -68,6 +68,7 @@ export class QuestionuploadComponent implements OnInit {
   questionOwnerDetails: QuestionOwnerDetails;
   parentQuestionId: string;
   attachParent: boolean;
+  parentQuestionList: Array<ParentquestionModel>;
 
   temp: Array<CorrectAnswer>;
 
@@ -92,20 +93,27 @@ export class QuestionuploadComponent implements OnInit {
     this.multipleQuestionOption = [{optionKey: '', optionValue: ''}];
     this.questionOwnerDetails = {name: '', address: '', instituteName: '', schoolName: '', emailId: ''};
     this.questionHint = {hint: ''};
-
     this.indexValue = 0;
+    // hardcoded
+    const userId = 'aniwesh';
+    this.questionuploadService.getParentQuestionsByUser(userId).subscribe(
+      (response) => {
+        this.parentQuestionList = response;
+      },
+      (err) => {
+        console.log(err);
+      }
+    );
+
   }
 
-  uploadImageFiles(files: FileList, action: string) {
-    this.labelImport.nativeElement.innerText = Array.from(files)
-      .map(f => f.name)
-      .join(', ');
+  setImageFiles(event, action) {
     if (action === `${globalConfig.constants.questionDescImage}`) {
-      this.questionDescriptionImage = files.item(0);
+      this.questionDescriptionImage = event.target.files.item(0);
     } else if (action === `${globalConfig.constants.scannedQuestionFile}`) {
-      this.scannedQuestionFile = files.item(0);
+      this.scannedQuestionFile = event.target.files.item(0);
     } else if (action === `${globalConfig.constants.hintImage}`) {
-      this.questionHintImage = files.item(0);
+      this.questionHintImage = event.target.files.item(0);
     }
   }
 
@@ -134,6 +142,10 @@ export class QuestionuploadComponent implements OnInit {
     this.questionOptions = {multipleQuestionOption: this.multipleQuestionOption};
     this.questionCorrectAnswer = {correctAnswers: this.temp};
 
+    const formData = new FormData();
+    formData.append('questionContentFile', this.questionDescriptionImage);
+    formData.append('scannedQuestionFile', this.scannedQuestionFile);
+
     if (this.isParent) {
       this.parentQuestionModel = {
         parentQuestionId: this.parentQuestionId === undefined ? null : this.parentQuestionId,
@@ -148,14 +160,21 @@ export class QuestionuploadComponent implements OnInit {
       };
       this.questionuploadService.uploadParentQuestion(this.parentQuestionModel).subscribe(
         (res) => {
-          this.questionUploadSuccess();
+          this.questionuploadService.uploadParentQuestionImage(res.parentQuestionId, formData).subscribe(
+            (resp) => {
+              this.questionUploadSuccessMessage();
+              setTimeout(() => window.location.reload(), 5000);
+            }, (exp) => {
+              this.questionUploadFailureMessage();
+            }
+          );
         },
         (err) => {
-          this.questionUploadFailure();
+          this.questionUploadFailureMessage();
         });
     } else {
       this.questionUploadModel = {
-        id: null,
+        questionId: null,
         questionDescription: this.questionDescription,
         questionHeader: this.questionHeader,
         questionOptions: this.questionOptions,
@@ -165,20 +184,23 @@ export class QuestionuploadComponent implements OnInit {
         questionComplexityLevel: this.questionComplexityLevel,
         questionMetadata: this.questionMetadata,
         questionOwnerDetails: this.questionOwnerDetails,
-        questionHint: this.questionHint
+        questionHint: this.questionHint,
+        questionStatus: null
       };
-
-      const formData = new FormData();
-      formData.append('questionContentImage', this.questionDescriptionImage);
-      formData.append('scannedQuestionFile', this.scannedQuestionFile);
-      formData.append('question', JSON.stringify(this.questionUploadModel));
-
-      this.questionuploadService.uploadQuestion(formData).subscribe(
+      formData.append('questionHintAsImage', this.questionHintImage);
+      this.questionuploadService.uploadQuestion(this.questionUploadModel).subscribe(
         (res) => {
-          this.questionUploadSuccess();
+          this.questionuploadService.uploadQuestionImage(res.questionId, formData).subscribe(
+            (resp) => {
+              this.questionUploadSuccessMessage();
+              setTimeout(() => window.location.reload(), 5000);
+            }, (exp) => {
+              this.questionUploadFailureMessage();
+            }
+          );
         },
         (err) => {
-          this.questionUploadFailure();
+          this.questionUploadFailureMessage();
         }
       );
     }
@@ -186,26 +208,29 @@ export class QuestionuploadComponent implements OnInit {
 
   openSnackBar(message: string, action: string, customClass: string) {
     this._snackBar.open(message, action, {
-      duration: 8000,
+      duration: 5000,
       verticalPosition: 'top',
       panelClass: customClass
     });
   }
 
-  questionUploadSuccess(): void {
+  questionUploadSuccessMessage(): void {
     this.barButtonOptions.active = false;
     this.barButtonOptions.text = `${globalConfig.buttontext.questionUpload}`;
     this.openSnackBar(`${globalConfig.alertmessages.questionUploadSuccess}`, '', 'snack-bar-success');
   }
 
-  questionUploadFailure(): void {
+  questionUploadFailureMessage(): void {
     this.barButtonOptions.active = false;
     this.barButtonOptions.text = `${globalConfig.buttontext.questionUpload}`;
     this.openSnackBar(`${globalConfig.alertmessages.questionUploadFailure}`, '', 'snack-bar-error');
   }
 
-  openBottomSheet(): void {
-    this._bottomSheet.open(BottomsheetComponent);
+  openBottomSheet(index: number, event: any): void {
+    if (event.isUserInput) {// ignore on deselection of the previous option, as is the case of onSelectionChange
+      this.questionuploadService.parentQuestion = this.parentQuestionList[index];
+      this._bottomSheet.open(BottomsheetComponent);
+    }
   }
 
 }

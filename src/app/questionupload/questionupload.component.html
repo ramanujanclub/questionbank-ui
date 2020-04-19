@@ -17,7 +17,7 @@
         <p style="padding-top: 15px;">
           <label id="attach-parent-question-label" style="vertical-align: middle; font-weight: bold; font-size: 17px">Do
             you want to attach a Master question?</label>
-          <mat-radio-group aria-labelledby="attach-parent-question-label" [(ngModel)]="attachParent" >
+          <mat-radio-group aria-labelledby="attach-parent-question-label" [(ngModel)]="attachParent">
             <mat-radio-button [value]="true">Yes</mat-radio-button>
             <mat-radio-button [value]="false">No</mat-radio-button>
           </mat-radio-group>
@@ -30,11 +30,11 @@
           <br>
           <mat-form-field appearance="outline" style="padding-top: 15px; width:40vw">
             <mat-label>Select one master question to attach</mat-label>
-            <mat-select (ngModelChange)="openBottomSheet()" [(ngModel)]="parentQuestionId" name="chapter">
-              <mat-option value=1>Question 1</mat-option>
-              <mat-option value=2>Question 2</mat-option>
-              <mat-option value=3>Question 3</mat-option>
-              <mat-option value=4>Question 4</mat-option>
+            <mat-select [(ngModel)]="parentQuestionId" name="chapter">
+              <mat-option *ngFor="let option of parentQuestionList;let index = index" [value]="option.parentQuestionId"
+                          (onSelectionChange)="openBottomSheet(index, $event)">
+                {{option.questionDescription}}
+              </mat-option>
             </mat-select>
           </mat-form-field>
         </p>
@@ -88,33 +88,16 @@
         <mat-label style="font-weight: bold; font-size: 17px;vertical-align: middle;">Question Description Image:
         </mat-label>
         <form validate [formGroup]="formImport" style="padding-top: 15px">
-          <div class="input-group mb-3">
-            <div class="custom-file">
-              <input type="file" class="custom-file-input" multiple formControlName="uploadQuestionDescImage"
-                     id="uploadQuestionDescImage"
-                     (change)="uploadImageFiles($event.target.files, 'questiondescimage')"/>
-              <label class="custom-file-label" #labelImport for="uploadQuestionDescImage"><i class="fas fa-search"></i>
-                Question Description Image (if any)</label>
-            </div>
-          </div>
+          <input type="file" id="uploadQuestionDescImage" (change)="setImageFiles($event, 'questiondescimage')"/>
         </form>
-
 
       </div>
 
       <div style="width: 40vw; padding-bottom: 20px" *ngIf="uploadScannedQuestion">
         <mat-label style="font-weight: bold; font-size: 17px; vertical-align: middle">Scanned Question:</mat-label>
         <br><br>
-        <form validate [formGroup]="formImport">
-          <div class="input-group mb-3">
-            <div class="custom-file">
-              <input type="file" class="custom-file-input" multiple formControlName="uploadScannedQuestionFile"
-                     id="uploadScannedQuestionFile"
-                     (change)="uploadImageFiles($event.target.files, 'scannedquestionfile')"/>
-              <label class="custom-file-label" #labelImport for="uploadScannedQuestionFile"><i
-                class="fas fa-search"></i>Scanned Question File</label>
-            </div>
-          </div>
+        <form validate [formGroup]="formImport" style="padding-top: 15px">
+          <input type="file" id="uploadScannedQuestionFile" (change)="setImageFiles($event, 'scannedquestionfile')"/>
         </form>
       </div>
 
@@ -181,15 +164,7 @@
           <mat-label style="font-weight: bold; font-size: 17px; vertical-align: middle">Question Hint Image:</mat-label>
           <br><br>
           <form validate [formGroup]="formImport">
-            <div class="input-group mb-3">
-              <div class="custom-file">
-                <input type="file" class="custom-file-input" multiple formControlName="uploadQuestionHintImage"
-                       id="uploadQuestionHintImage"
-                       (change)="uploadImageFiles($event.target.files, 'hintimage')"/>
-                <label class="custom-file-label" #labelImport for="uploadQuestionHintImage"><i
-                  class="fas fa-search"></i>Question Hint Image (If any)</label>
-              </div>
-            </div>
+            <input type="file" id="uploadHintImage" (change)="setImageFiles($event, 'hintimage')"/>
           </form>
         </div>
       </div>
@@ -323,7 +298,7 @@
                       [options]="barButtonOptions"
                       (btnClick)="uploadQuestion()">
       </mat-bar-button>
-      <button type="button" class="btn btn-secondary">Cancel</button>
+      <button [routerLink]="['/home']"  type="button" class="btn btn-secondary">Cancel</button>
 
     </div>
 

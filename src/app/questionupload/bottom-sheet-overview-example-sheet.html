@@ -1,7 +1,19 @@
 <div>
   <br>
-  This space will contain a small preview of the Parent Question.
+  <div *ngIf="parentQuestionModel.questionHeader"
+       style="margin: auto; width: 100%; text-decoration: underline; text-transform:uppercase; font-weight: bold">
+    {{parentQuestionModel?.questionHeader}}
+  </div>
   <br>
-  This is give the user an idea if the parent question they selected was the intended one or not.
-  <br><br>
+  <div *ngIf="parentQuestionModel.questionDescription" style="width: 100%; text-align:left;">
+    <b>Description: </b>{{parentQuestionModel?.questionDescription}}</div>
+  <br>
+  <div *ngIf="parentQuestionModel.questionComplexityLevel" style="width: 100%; text-align:left;">
+    <b>Class: </b>{{parentQuestionModel?.classId}}</div>
+  <br>
+  <div *ngIf="parentQuestionModel.questionComplexityLevel" style="width: 100%; text-align:left;">
+    <b>Complexity: </b>{{parentQuestionModel?.questionComplexityLevel}}</div>
+  <br>
+  <div *ngIf="parentQuestionModel.questionNote" style="width: 100%; text-align:left;">
+    <b>Note: </b>{{parentQuestionModel?.questionNote}}</div>
 </div>

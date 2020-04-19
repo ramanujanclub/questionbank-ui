@@ -3,6 +3,10 @@ mat-form-field {
   padding-bottom: 10px;
 }
 
+input.mat-input-element {
+  height: 20px;
+}
+
 mat-radio-button {
   padding-left: 20px;
   padding-bottom: 30px;

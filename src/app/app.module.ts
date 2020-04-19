@@ -25,13 +25,19 @@ import {MatBottomSheetModule} from '@angular/material/bottom-sheet';
 import {BottomsheetComponent} from './questionupload/bottomsheet.component';
 import {MatListModule} from '@angular/material/list';
 import {MatDialogModule} from '@angular/material/dialog';
+import {VerifyandapproveComponent} from './verifyandapprove/verifyandapprove.component';
+import {MatTableModule} from '@angular/material/table';
+import {MatPaginatorModule} from '@angular/material/paginator';
+import {QuestioneditComponent} from './questionedit/questionedit.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     QuestionuploadComponent,
     HomeComponent,
-    BottomsheetComponent
+    BottomsheetComponent,
+    VerifyandapproveComponent,
+    QuestioneditComponent
   ],
   imports: [
     BrowserModule,
@@ -55,7 +61,9 @@ import {MatDialogModule} from '@angular/material/dialog';
     MatProgressButtonsModule,
     MatBottomSheetModule,
     MatListModule,
-    MatDialogModule
+    MatDialogModule,
+    MatTableModule,
+    MatPaginatorModule
   ],
   providers: [
     {provide: ErrorStateMatcher, useClass: ShowOnDirtyErrorStateMatcher}

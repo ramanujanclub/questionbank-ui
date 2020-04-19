@@ -1,4 +1,4 @@
-export interface QuestionuploadModel {
+export interface QuestioneditModel {
   questionId: string ;
   questionDescription: string ;
   questionHeader: string ;
@@ -57,4 +57,9 @@ export interface QuestionStatus {
   verifiedByUserId: string;
   submittedDate: string;
   approvedByUserId: string;
+}
+
+
+export interface VerifyQuestionRequest {
+  verifiedByUserId: string;
 }
